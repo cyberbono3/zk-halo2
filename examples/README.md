@@ -5,4 +5,4 @@ such that `y^2` is congruent to `x mod p`
 
 
 The circuit is written to prove `y = f(x)` for  a function `f: Fp -> u64`,
-where the ith of `f(x)` is 1 if `x + i` is a quadratic residue and 0 otherswise for `i = [0..63]`
+where the ith of `f(x)` is 1 if `x + i` is a quadratic residue and 0 otherwise for `i = [0..63]`

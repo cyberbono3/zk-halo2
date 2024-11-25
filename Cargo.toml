@@ -1,0 +1,14 @@
+[package]
+name = "zk-halo2"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [
+    "examples",
+]
+
+[dependencies]
+examples = { version = "^0.1.0", path = "./examples" }
+
+

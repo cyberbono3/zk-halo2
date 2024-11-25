@@ -1,5 +1,5 @@
-use std::marker::PhantomData;
 use halo2_proofs::{arithmetic::FieldExt, circuit::*, plonk::*, poly::Rotation};
+use std::marker::PhantomData;
 
 #[derive(Debug, Clone)]
 struct FibonacciConfig {
@@ -14,7 +14,6 @@ struct FibonacciConfig {
     // public insrtance
     pub instance: Column<Instance>,
 }
-
 
 #[derive(Debug, Clone)]
 struct FibonacciChip<F: FieldExt> {
@@ -78,14 +77,16 @@ impl<F: FieldExt> FibonacciChip<F> {
                     self.config.instance,
                     0,
                     self.config.col_a,
-                    0)?;
+                    0,
+                )?;
 
                 let b_cell = region.assign_advice_from_instance(
                     || "f(1)",
                     self.config.instance,
                     1,
                     self.config.col_b,
-                    0)?;
+                    0,
+                )?;
 
                 let c_cell = region.assign_advice(
                     || "a + b",
@@ -111,18 +112,8 @@ impl<F: FieldExt> FibonacciChip<F> {
                 self.config.selector.enable(&mut region, 0)?;
 
                 // Copy the value from b & c in previous row to a & b in current row
-                prev_b.copy_advice(
-                    || "a",
-                    &mut region,
-                    self.config.col_a,
-                    0,
-                )?;
-                prev_c.copy_advice(
-                    || "b",
-                    &mut region,
-                    self.config.col_b,
-                    0,
-                )?;
+                prev_b.copy_advice(|| "a", &mut region, self.config.col_a, 0)?;
+                prev_c.copy_advice(|| "b", &mut region, self.config.col_b, 0)?;
 
                 let c_cell = region.assign_advice(
                     || "c",
@@ -146,13 +137,10 @@ impl<F: FieldExt> FibonacciChip<F> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::marker::PhantomData;
-
-    use halo2_proofs::{dev::MockProver, pasta::Fp};
     use super::*;
+    use halo2_proofs::{dev::MockProver, pasta::Fp};
 
     #[derive(Default)]
     struct TestCircuit<F>(PhantomData<F>);
@@ -180,7 +168,8 @@ mod tests {
                 chip.assign_first_row(layouter.namespace(|| "first row"))?;
 
             for _i in 3..10 {
-                let c_cell = chip.assign_row(layouter.namespace(|| "next row"), &prev_b, &prev_c)?;
+                let c_cell =
+                    chip.assign_row(layouter.namespace(|| "next row"), &prev_b, &prev_c)?;
                 prev_b = prev_c;
                 prev_c = c_cell;
             }
@@ -192,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn fibonacci_example1() {
+    fn test_fib1() {
         let k = 4;
 
         let a = Fp::from(1); // F[0]
@@ -212,4 +201,3 @@ mod tests {
         // _prover.assert_satisfied();
     }
 }
-

@@ -1,7 +1,7 @@
 use halo2_proofs::{
-    halo2curves::bn256::Fr,
-    arithmetic::{FieldExt, Field},
+    arithmetic::{Field, FieldExt},
     circuit::{Layouter, Region, Value},
+    halo2curves::bn256::Fr,
     plonk::{Advice, Column, ConstraintSystem, Error, Expression, Fixed, Selector},
     poly::Rotation,
 };
@@ -184,8 +184,7 @@ impl<F: FieldExt> ResiduePatternChip<F> {
 mod tests {
     use super::*;
     use halo2_proofs::{
-        arithmetic::Field, circuit::SimpleFloorPlanner, dev::MockProver,
-        plonk::Circuit,
+        arithmetic::Field, circuit::SimpleFloorPlanner, dev::MockProver, plonk::Circuit,
     };
 
     #[derive(Default)]

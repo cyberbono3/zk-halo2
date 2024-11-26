@@ -6,11 +6,13 @@ edition = "2021"
 [dev-dependencies]
 ark-std = { version = "0.3", features = ["print-trace"] }
 ethers-core = "^1.0.0"
-halo2_proofs = { git = "https://github.com/halo2-ce/halo2.git" }
+halo2_proofs  = { git = "https://github.com/halo2-ce/halo2.git" }
+halo2_proofs_zcash = { git = "https://github.com/zcash/halo2.git", package ="halo2_proofs",  rev = "a898d65ae3ad3d41987666f6a03cfc15edae01c4"}
 rand = "0.8"
 rand_chacha = "0.3"
 rand_xorshift = "0.3"
 
 [dependencies]
-
 residue_pattern = { version = "^0.1.0", path = "../residue_pattern", features = [ "test" ] }
+fib = { version = "^0.1.0", path = "../fib" }
+

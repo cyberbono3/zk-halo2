@@ -2,7 +2,7 @@ use halo2_proofs::{arithmetic::FieldExt, circuit::*, plonk::*, poly::Rotation};
 use std::marker::PhantomData;
 
 #[derive(Debug, Clone)]
-struct FibonacciConfig {
+pub struct FibonacciConfig {
     // private inputs
     pub col_a: Column<Advice>,
     pub col_b: Column<Advice>,
@@ -137,48 +137,51 @@ impl<F: FieldExt> FibonacciChip<F> {
     }
 }
 
+#[derive(Default)]
+pub struct TestFibCircuit<F>(PhantomData<F>);
+
+
+impl<F: FieldExt> Circuit<F> for TestFibCircuit<F> {
+    type Config = FibonacciConfig;
+    type FloorPlanner = SimpleFloorPlanner;
+
+    fn without_witnesses(&self) -> Self {
+        Self::default()
+    }
+
+    fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
+        FibonacciChip::configure(meta)
+    }
+
+    fn synthesize(
+        &self,
+        config: Self::Config,
+        mut layouter: impl Layouter<F>,
+    ) -> Result<(), Error> {
+        let chip = FibonacciChip::construct(config);
+
+        let (_, mut prev_b, mut prev_c) =
+            chip.assign_first_row(layouter.namespace(|| "first row"))?;
+
+        for _i in 3..10 {
+            let c_cell =
+                chip.assign_row(layouter.namespace(|| "next row"), &prev_b, &prev_c)?;
+            prev_b = prev_c;
+            prev_c = c_cell;
+        }
+
+        chip.expose_public(layouter.namespace(|| "out"), &prev_c, 2)?;
+
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use halo2_proofs::{dev::MockProver, pasta::Fp};
 
-    #[derive(Default)]
-    struct TestCircuit<F>(PhantomData<F>);
-
-    impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
-        type Config = FibonacciConfig;
-        type FloorPlanner = SimpleFloorPlanner;
-
-        fn without_witnesses(&self) -> Self {
-            Self::default()
-        }
-
-        fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
-            FibonacciChip::configure(meta)
-        }
-
-        fn synthesize(
-            &self,
-            config: Self::Config,
-            mut layouter: impl Layouter<F>,
-        ) -> Result<(), Error> {
-            let chip = FibonacciChip::construct(config);
-
-            let (_, mut prev_b, mut prev_c) =
-                chip.assign_first_row(layouter.namespace(|| "first row"))?;
-
-            for _i in 3..10 {
-                let c_cell =
-                    chip.assign_row(layouter.namespace(|| "next row"), &prev_b, &prev_c)?;
-                prev_b = prev_c;
-                prev_c = c_cell;
-            }
-
-            chip.expose_public(layouter.namespace(|| "out"), &prev_c, 2)?;
-
-            Ok(())
-        }
-    }
+   
 
     #[test]
     fn test_fib1() {
@@ -188,7 +191,7 @@ mod tests {
         let b = Fp::from(1); // F[1]
         let out = Fp::from(55); // F[9]
 
-        let circuit = TestCircuit(PhantomData);
+        let circuit = TestFibCircuit(PhantomData);
 
         let mut public_input = vec![a, b, out];
 

@@ -1,0 +1,1 @@
+DEGREE=10 cargo test --package benchmarking --lib -- residue_pattern_benches::tests --show-output 

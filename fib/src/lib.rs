@@ -1,2 +1,2 @@
-mod fib1;
-mod fib2;
+pub mod fib1;
+pub mod fib2;

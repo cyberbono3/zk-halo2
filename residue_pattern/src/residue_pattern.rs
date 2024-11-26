@@ -2,8 +2,9 @@ use halo2_proofs::{
     arithmetic::{Field, FieldExt},
     circuit::{Layouter, Region, Value},
     halo2curves::bn256::Fr,
-    plonk::{Advice, Column, ConstraintSystem, Error, Expression, Fixed, Selector},
+    plonk::{Advice, Column, ConstraintSystem, Error, Expression, Fixed, Selector, Circuit},
     poly::Rotation,
+    circuit::SimpleFloorPlanner,
 };
 
 #[derive(Clone, Copy)]
@@ -180,52 +181,50 @@ impl<F: FieldExt> ResiduePatternChip<F> {
     }
 }
 
+#[derive(Default)]
+pub struct TestResiduePatternCircuit<F> {
+    pub values: Vec<F>,
+    pub length: usize,
+    pub nonresidue: F,
+}
+
+impl<F: FieldExt> TestResiduePatternCircuit<F> {
+    pub fn nonresidue() -> F {
+        F::from(5)
+    }
+}
+
+impl<F: FieldExt> Circuit<F> for TestResiduePatternCircuit<F> {
+    type Config = ResiduePatternConfig;
+    type FloorPlanner = SimpleFloorPlanner;
+
+    fn without_witnesses(&self) -> Self {
+        Self::default()
+    }
+
+    fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
+        ResiduePatternConfig::configure(meta, Self::nonresidue())
+    }
+
+    fn synthesize(
+        &self,
+        config: Self::Config,
+        mut layouter: impl Layouter<F>,
+    ) -> Result<(), Error> {
+        let chip = ResiduePatternChip {
+            config,
+            length: self.length,
+            nonresidue: self.nonresidue,
+        };
+        chip.assign(&mut layouter, &self.values)?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use halo2_proofs::{
-        arithmetic::Field, circuit::SimpleFloorPlanner, dev::MockProver, plonk::Circuit,
-    };
-
-    #[derive(Default)]
-    struct TestCircuit<F> {
-        values: Vec<F>,
-        length: usize,
-        nonresidue: F,
-    }
-
-    impl<F: FieldExt> TestCircuit<F> {
-        fn nonresidue() -> F {
-            F::from(5)
-        }
-    }
-
-    impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
-        type Config = ResiduePatternConfig;
-        type FloorPlanner = SimpleFloorPlanner;
-
-        fn without_witnesses(&self) -> Self {
-            Self::default()
-        }
-
-        fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
-            ResiduePatternConfig::configure(meta, Self::nonresidue())
-        }
-
-        fn synthesize(
-            &self,
-            config: Self::Config,
-            mut layouter: impl Layouter<F>,
-        ) -> Result<(), Error> {
-            let chip = ResiduePatternChip {
-                config,
-                length: self.length,
-                nonresidue: self.nonresidue,
-            };
-            chip.assign(&mut layouter, &self.values)?;
-            Ok(())
-        }
-    }
+    use halo2_proofs::dev::MockProver;
 
     #[test]
     fn test_vectors() {
@@ -246,17 +245,17 @@ mod tests {
     #[test]
     fn test_nonresidue() {
         assert_eq!(
-            Option::<Fr>::from(TestCircuit::<Fr>::nonresidue().sqrt()),
+            Option::<Fr>::from(TestResiduePatternCircuit::<Fr>::nonresidue().sqrt()),
             None
         );
     }
 
     #[test]
     fn test_residue_pattern_circuit() {
-        let circuit = TestCircuit {
+        let circuit = TestResiduePatternCircuit {
             values: vec![0.into(), 2323.into(), 124123123.into(), 3.into()],
             length: 64,
-            nonresidue: TestCircuit::<Fr>::nonresidue(),
+            nonresidue: TestResiduePatternCircuit::<Fr>::nonresidue(),
         };
 
         let k = 10;

@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = [
-    "examples", "fib",
+members = [ "benchmarking",
+    "residue_pattern", "fib",
 ]
 
 [dependencies]
-examples = { version = "^0.1.0", path = "./examples" }
+residue_pattern = { version = "^0.1.0", path = "./residue_pattern" }
+fib = { version = "^0.1.0", path = "./fib" }
 
 

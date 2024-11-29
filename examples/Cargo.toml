@@ -1,0 +1,8 @@
+[package]
+name = "examples"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+halo2_proofs = { git = "https://github.com/halo2-ce/halo2.git" }
+ff = "0.13"

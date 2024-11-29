@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 halo2_proofs = { git = "https://github.com/halo2-ce/halo2.git" }
+
